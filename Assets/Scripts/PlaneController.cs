@@ -3,17 +3,21 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using System.Linq;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AreaCalculator))]
 public class PlaneController : MonoBehaviour
 {
-    [SerializeField] private Vector2 _input;
+    // Input
+    private Vector2 _input;
 
+    // Preferences
     [SerializeField, Header("Aircraft Specifications")] private float _dragCoefficient = 0f;
+    [SerializeField] private List<Thruster> _thrusters = new List<Thruster>();
 
-    [SerializeField, Header("Weather Conditions")] private float _fluidDensity;
+    [SerializeField, Header("Weather Conditions")] private float _airDensity;
 
     [SerializeField, Header("Testing")] private Vector3 _testVelocity;
     [SerializeField] private bool _test;
@@ -25,6 +29,8 @@ public class PlaneController : MonoBehaviour
     {
         _ac = GetComponent<AreaCalculator>();
         _rb = GetComponent<Rigidbody>();
+        _thrusters.Clear();
+        _thrusters = GetComponentsInChildren<Thruster>(true).ToList();
     }
 
     private void Update()
@@ -36,9 +42,22 @@ public class PlaneController : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        FireThrusters();
+    }
+
+    private void FireThrusters()
+    {
+        for (int i = 0; i < _thrusters.Count; i++)
+        {
+            _thrusters[i].FireThruster(_rb, _input.y);
+        }
+    }
+
     private void CalculateDrag()
     {
-        float dragForce = _dragCoefficient * _ac.Return2DArea() * ((_fluidDensity * Mathf.Pow(ReturnAirspeed().magnitude, 2)) / 2);
+        float dragForce = _dragCoefficient * _ac.Return2DArea() * ((_airDensity * Mathf.Pow(ReturnAirspeed().magnitude, 2)) / 2);
         Vector3 dragVector = dragForce * ReturnAirspeed().normalized;
         Debug.Log(dragVector + ", " + dragForce);
     }
@@ -53,10 +72,5 @@ public class PlaneController : MonoBehaviour
     {
         _input = inputValue.Get<Vector2>();
         Debug.Log(_input);
-    }
-
-    public void OnAccelerate(InputValue inputValue)
-    {
-        float accelInput = inputValue.Get<float>();
     }
 }
