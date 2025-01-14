@@ -9,7 +9,7 @@ public class Flap : MonoBehaviour
     public void ApplyForce(Rigidbody rb, float airDensity)
     {
         // Calculate magnitude of drag force
-        float forceMagnitude = 0.5f * airDensity * Mathf.Pow(rb.velocity.magnitude, 2) * DragCoefficient * EstimateArea(rb);
+        float forceMagnitude = 0.5f * airDensity * Mathf.Pow(rb.linearVelocity.magnitude, 2) * DragCoefficient * EstimateArea(rb);
         Vector3 force = forceMagnitude * transform.up;
         
 
