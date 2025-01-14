@@ -18,7 +18,7 @@ public class Flap : MonoBehaviour
 
     private float EstimateArea(Rigidbody rb)
     {
-        float angle = Vector3.Angle(transform.up, rb.velocity);
+        float angle = Vector3.Angle(transform.up, rb.linearVelocity);
         float ratio = Mathf.Cos(angle);
         return PlanarArea * ratio;
     }

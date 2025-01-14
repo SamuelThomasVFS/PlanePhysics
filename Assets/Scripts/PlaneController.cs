@@ -13,7 +13,8 @@ public class PlaneController : MonoBehaviour
     [field:SerializeField] private Transform LockedTarget { get; set; }
     
     // Input
-    private Vector2 _input;
+    private float _yawInput;
+    private float _accelInput;
 
     // Preferences
     [SerializeField, Header("Aircraft Specifications")] private float _dragCoefficient = 0f;
@@ -22,7 +23,6 @@ public class PlaneController : MonoBehaviour
 
     [SerializeField, Header("Weapon Specifications")] private Transform _missileBay; 
     [SerializeField] private GameObject _missilePrefab;
-    
     
     [SerializeField, Header("Weather Conditions")] private float _airDensity;
 
@@ -60,7 +60,7 @@ public class PlaneController : MonoBehaviour
     {
         for (int i = 0; i < _thrusters.Count; i++)
         {
-            _thrusters[i].FireThruster(_rb, _input.y);
+            _thrusters[i].FireThruster(_rb, _accelInput);
         }
     }
 
@@ -85,10 +85,12 @@ public class PlaneController : MonoBehaviour
         return -_rb.linearVelocity;
     }
 
+    // -- Input handler methods --
     public void OnMove(InputValue inputValue)
     {
-        _input = inputValue.Get<Vector2>();
-        Debug.Log(_input);
+        Vector2 input = inputValue.Get<Vector2>();
+        _yawInput = input.x;
+        _accelInput = input.y;
     }
 
     public void OnFire1(InputValue inputValue)
