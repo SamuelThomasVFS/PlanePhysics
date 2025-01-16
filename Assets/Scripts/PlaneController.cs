@@ -19,7 +19,10 @@ public class PlaneController : MonoBehaviour
     
     // Plane modules
     [SerializeField, Header("Modules")] private List<Thruster> _thrusters = new List<Thruster>();
-    [SerializeField] private List<Flap> _flaps = new List<Flap>();
+    private List<Flap> _flaps = new List<Flap>();
+    [SerializeField] private List<Flap> _elevators = new List<Flap>();
+    [SerializeField] private List<Flap> _ailerons = new List<Flap>();
+    [SerializeField] private List<Flap> _rudders = new List<Flap>();
 
     [SerializeField] private Transform _pilotTransform;
     [SerializeField] private Transform _pilotSeat;
@@ -46,8 +49,18 @@ public class PlaneController : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
         _thrusters.Clear();
         _thrusters = GetComponentsInChildren<Thruster>(true).ToList();
-        _flaps.Clear();
-        _flaps = GetComponentsInChildren<Flap>(true).ToList();
+        foreach (var _elevator in _elevators)
+        {
+            _flaps.Add(_elevator);
+        }
+        foreach (var _aileron in _ailerons)
+        {
+            _flaps.Add(_aileron);
+        }
+        foreach (var _rudder in _rudders)
+        {
+            _flaps.Add(_rudder);   
+        }
         _forwardCamera.Priority = 2;
     }
 
@@ -59,7 +72,7 @@ public class PlaneController : MonoBehaviour
     private void FixedUpdate()
     {
         FireThrusters();
-        //ApplyFlaps();
+        //ApplyFlapResistance
     }
 
     private void FireThrusters()
@@ -70,7 +83,7 @@ public class PlaneController : MonoBehaviour
         }
     }
 
-    private void ApplyFlaps()
+    private void ApplyFlapResistance()
     {
         for (int i = 0; i < _flaps.Count; i++)
         {
