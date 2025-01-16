@@ -4,33 +4,41 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Cinemachine;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AreaCalculator))]
 public class PlaneController : MonoBehaviour
 {
-    [field:SerializeField] private Transform LockedTarget { get; set; }
+    private Transform _lockedTarget;
+    
+    // Weapons
+    [SerializeField, Header("Weapon Specifications")] private Transform _missileBay; 
+    [SerializeField] private GameObject _missilePrefab;
+    
+    // Plane modules
+    [SerializeField, Header("Modules")] private List<Thruster> _thrusters = new List<Thruster>();
+    [SerializeField] private List<Flap> _flaps = new List<Flap>();
+
+    [SerializeField] private Transform _pilotTransform;
+    [SerializeField] private Transform _pilotSeat;
+    [SerializeField] private Transform _camCenter;
+    [SerializeField] private CinemachineCamera _forwardCamera;
+    [SerializeField] private CinemachineCamera _firstPersonCamera;
+    
+    // Data
+    [SerializeField, Header("Data")] private FlightConditionsData _flightConditions;
+    [SerializeField] private PlaneSpecificationsData _planeSpecs;
+    
+    // Essential components
+    private AreaCalculator _ac;
+    private Rigidbody _rb;
     
     // Input
     private float _yawInput;
     private float _accelInput;
-
-    // Preferences
-    [SerializeField, Header("Aircraft Specifications")] private float _dragCoefficient = 0f;
-    [SerializeField] private List<Thruster> _thrusters = new List<Thruster>();
-    [SerializeField] private List<Flap> _flaps = new List<Flap>();
-
-    [SerializeField, Header("Weapon Specifications")] private Transform _missileBay; 
-    [SerializeField] private GameObject _missilePrefab;
-    
-    [SerializeField, Header("Weather Conditions")] private float _airDensity;
-
-    [SerializeField, Header("Testing")] private Vector3 _testVelocity;
-    [SerializeField] private bool _test;
-    
-    private AreaCalculator _ac;
-    private Rigidbody _rb;
+    private Vector2 _mouseInput;
 
     private void Awake()
     {
@@ -40,20 +48,18 @@ public class PlaneController : MonoBehaviour
         _thrusters = GetComponentsInChildren<Thruster>(true).ToList();
         _flaps.Clear();
         _flaps = GetComponentsInChildren<Flap>(true).ToList();
+        _forwardCamera.Priority = 2;
     }
 
     private void Update()
     {
-        if (_test)
-        {
-            _test = false;
-            CalculateDrag();
-        }
+        HandleMouseInput();
     }
-
+    
     private void FixedUpdate()
     {
         FireThrusters();
+        //ApplyFlaps();
     }
 
     private void FireThrusters()
@@ -64,28 +70,33 @@ public class PlaneController : MonoBehaviour
         }
     }
 
-    private void CheckFlaps()
+    private void ApplyFlaps()
     {
         for (int i = 0; i < _flaps.Count; i++)
         {
-            _flaps[i].ApplyForce(_rb, _airDensity);
+            _flaps[i].ApplyForce(_rb, _flightConditions.AirDensity);
         }
     }
 
     private void CalculateDrag()
     {
-        float dragForce = _dragCoefficient * _ac.Return2DArea() * ((_airDensity * Mathf.Pow(ReturnAirspeed().magnitude, 2)) / 2);
+        float dragForce = _planeSpecs.DragCoefficient * _ac.Return2DArea() * ((_flightConditions.AirDensity * Mathf.Pow(ReturnAirspeed().magnitude, 2)) / 2);
         Vector3 dragVector = dragForce * ReturnAirspeed().normalized;
         Debug.Log(dragVector + ", " + dragForce);
     }
 
     private Vector3 ReturnAirspeed()
     {
-        if (_testVelocity != Vector3.zero) return _testVelocity;
         return -_rb.linearVelocity;
     }
 
     // -- Input handler methods --
+    private void HandleMouseInput()
+    {
+        _mouseInput.x = Input.GetAxis("Mouse X");
+        _mouseInput.y = Input.GetAxis("Mouse Y");
+    }
+    
     public void OnMove(InputValue inputValue)
     {
         Vector2 input = inputValue.Get<Vector2>();
@@ -95,15 +106,40 @@ public class PlaneController : MonoBehaviour
 
     public void OnFire1(InputValue inputValue)
     {
-        Debug.Log("Shooting");
+        
     }
 
     public void OnFire2(InputValue inputValue)
     {
-        Debug.Log("Missile away");
-        if (Instantiate(_missilePrefab, _missileBay.position, _missileBay.rotation).TryGetComponent(out Missile missile) && LockedTarget != null)
+        if (Instantiate(_missilePrefab, _missileBay.position, _missileBay.rotation).TryGetComponent(out Missile missile) && _lockedTarget != null)
         {
-            missile.Launch(LockedTarget);
+            missile.Launch(_lockedTarget);
+        }
+    }
+
+    public void OnEject(InputValue inputValue)
+    {
+        Debug.Log("Ejecting");
+        _pilotTransform.parent = null;
+        if (_pilotTransform.TryGetComponent(out Rigidbody rb))
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.AddForce(_pilotTransform.up * _planeSpecs.EjectionForce, ForceMode.Impulse);
+        }
+    }
+
+    public void OnSwitchCam(InputValue inputValue)
+    {
+        if (_forwardCamera.Priority == 2)
+        {
+            _firstPersonCamera.transform.rotation = _camCenter.rotation;
+            _forwardCamera.Priority = 0;
+        }
+        else
+        {
+            _firstPersonCamera.transform.rotation = _camCenter.rotation;
+            _forwardCamera.Priority = 2;
         }
     }
 }
