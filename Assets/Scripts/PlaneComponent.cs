@@ -14,6 +14,7 @@ public abstract class PlaneComponent : MonoBehaviour
     private void Awake()
     {
         _collider = GetComponent<Collider>();
+        _pc = GetComponentInParent<PlaneController>();
     }
     
     public void TakeDamage(float damage)
@@ -38,8 +39,3 @@ public abstract class PlaneComponent : MonoBehaviour
     }
 }
 
-public enum Side
-{
-    Left, 
-    Right
-}

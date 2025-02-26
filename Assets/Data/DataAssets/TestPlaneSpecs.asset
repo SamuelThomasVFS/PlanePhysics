@@ -15,4 +15,10 @@ MonoBehaviour:
   <DragCoefficient>k__BackingField: 1
   <EjectionForce>k__BackingField: 10
   <ThrottleRange>k__BackingField: {x: 0, y: 1}
+  <RudderMaxAngle>k__BackingField: 45
+  <AileronMaxAngle>k__BackingField: 45
+  <ElevatorMaxAngle>k__BackingField: 45
   <ThrottleInputAcceleration>k__BackingField: 0.3
+  <YawInputAcceleration>k__BackingField: 3
+  <RollInputAcceleration>k__BackingField: 1
+  <PitchInputAcceleration>k__BackingField: 1

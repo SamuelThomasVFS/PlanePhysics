@@ -59,9 +59,9 @@ public class PlaneController : MonoBehaviour
         YawInput += _yawInput * PlaneSpecs.YawInputAcceleration * Time.deltaTime;
         RollInput += _mouseInput.x * PlaneSpecs.RollInputAcceleration * Time.deltaTime;
         PitchInput += _mouseInput.y * PlaneSpecs.PitchInputAcceleration * Time.deltaTime;
-        YawInput = Mathf.Clamp(YawInput, PlaneSpecs.RudderAngleRange.x, PlaneSpecs.RudderAngleRange.y);
-        RollInput = Mathf.Clamp(RollInput, PlaneSpecs.AileronAngleRange.x, PlaneSpecs.AileronAngleRange.y);
-        PitchInput = Mathf.Clamp(PitchInput, PlaneSpecs.ElevatorAngleRange.x, PlaneSpecs.ElevatorAngleRange.y);
+        YawInput = Mathf.Clamp(YawInput, -1, 1);
+        RollInput = Mathf.Clamp(RollInput, -1, 1);
+        PitchInput = Mathf.Clamp(PitchInput, -1, 1);
         
         // Set public speed
         Speed = _rb.linearVelocity.magnitude;
