@@ -1,42 +1,38 @@
 using System;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.Cinemachine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AreaCalculator))]
 public class PlaneController : MonoBehaviour
 {
-    private Transform _lockedTarget;
-    
-    // Weapons
-    [SerializeField, Header("Weapon Specifications")] private Transform _missileBay; 
-    [SerializeField] private GameObject _missilePrefab;
-    
-    // Plane modules
-    [SerializeField, Header("Modules")] private List<Thruster> _thrusters = new List<Thruster>();
-    private List<Flap> _flaps = new List<Flap>();
-    [SerializeField] private List<Flap> _elevators = new List<Flap>();
-    [SerializeField] private List<Flap> _ailerons = new List<Flap>();
-    [SerializeField] private List<Flap> _rudders = new List<Flap>();
-
+    [Header("Spatial")]
     [SerializeField] private Transform _pilotTransform;
     [SerializeField] private Transform _pilotSeat;
     [SerializeField] private Transform _camCenter;
     [SerializeField] private CinemachineCamera _forwardCamera;
     [SerializeField] private CinemachineCamera _firstPersonCamera;
     
-    // Data
-    [SerializeField, Header("Data")] private FlightConditionsData _flightConditions;
-    [SerializeField] private PlaneSpecificationsData _planeSpecs;
+    [Header("Data")]
+    [SerializeField] private FlightConditionsData _flightConditions;
+    [field: SerializeField] public PlaneSpecificationsData PlaneSpecs;
+    
+    [field:SerializeField] public float Throttle { get; private set; }
+    [field:SerializeField] public float Speed { get; private set; }
+    
+    private List<PlaneComponent> _components = new List<PlaneComponent>();
+    private List<Thruster> _thrusters = new List<Thruster>();
     
     // Essential components
-    private AreaCalculator _ac;
+    private PlayerInput _playerInput;
     private Rigidbody _rb;
+    private AreaCalculator _ac;
     
     // Input
     private float _yawInput;
@@ -45,66 +41,56 @@ public class PlaneController : MonoBehaviour
 
     private void Awake()
     {
-        _ac = GetComponent<AreaCalculator>();
-        _rb = GetComponent<Rigidbody>();
-        _thrusters.Clear();
-        _thrusters = GetComponentsInChildren<Thruster>(true).ToList();
-        foreach (var _elevator in _elevators)
-        {
-            _flaps.Add(_elevator);
-        }
-        foreach (var _aileron in _ailerons)
-        {
-            _flaps.Add(_aileron);
-        }
-        foreach (var _rudder in _rudders)
-        {
-            _flaps.Add(_rudder);   
-        }
-        _forwardCamera.Priority = 2;
+        Initialize();
     }
 
     private void Update()
     {
-        HandleMouseInput();
-    }
-    
-    private void FixedUpdate()
-    {
-        FireThrusters();
-        //ApplyFlapResistance
+        GetMouseInput();
+        
+        // Set Throttle
+        Throttle += _accelInput * PlaneSpecs.ThrottleInputAcceleration * Time.deltaTime;
+        Throttle = Mathf.Clamp(Throttle, PlaneSpecs.ThrottleRange.x, PlaneSpecs.ThrottleRange.y);
+
+        // Set public speed
+        Speed = _rb.velocity.magnitude;
+
+
+
     }
 
-    private void FireThrusters()
+    private void Initialize()
     {
-        for (int i = 0; i < _thrusters.Count; i++)
-        {
-            _thrusters[i].FireThruster(_rb, _accelInput);
-        }
-    }
+        // Initialize essential references
+        _playerInput = GetComponent<PlayerInput>();
+        _rb = GetComponent<Rigidbody>();
+        _ac = GetComponent<AreaCalculator>();
+        
+        // Get a list of all components
+        _components = GetComponentsInChildren<PlaneComponent>().ToList();
 
-    private void ApplyFlapResistance()
-    {
-        for (int i = 0; i < _flaps.Count; i++)
+        // Divide the list into specific lists and provide key references
+        for (int i = 0; i < _components.Count; i++)
         {
-            _flaps[i].ApplyForce(_rb, _flightConditions.AirDensity);
+            _components[i].SetParentComponents(_rb, _flightConditions, this);
+            if (_components[i].TryGetComponent(out Thruster thruster)) _thrusters.Add(thruster);
         }
     }
 
     private void CalculateDrag()
     {
-        float dragForce = _planeSpecs.DragCoefficient * _ac.Return2DArea() * ((_flightConditions.AirDensity * Mathf.Pow(ReturnAirspeed().magnitude, 2)) / 2);
-        Vector3 dragVector = dragForce * ReturnAirspeed().normalized;
+        float dragForce = PlaneSpecs.DragCoefficient * _ac.Return2DArea() * ((_flightConditions.AirDensity * Mathf.Pow(GetAirspeed().magnitude, 2)) / 2);
+        Vector3 dragVector = dragForce * GetAirspeed().normalized;
         Debug.Log(dragVector + ", " + dragForce);
     }
 
-    private Vector3 ReturnAirspeed()
+    private Vector3 GetAirspeed()
     {
         return -_rb.linearVelocity;
     }
 
     // -- Input handler methods --
-    private void HandleMouseInput()
+    private void GetMouseInput()
     {
         _mouseInput.x = Input.GetAxis("Mouse X");
         _mouseInput.y = Input.GetAxis("Mouse Y");
@@ -119,15 +105,12 @@ public class PlaneController : MonoBehaviour
 
     public void OnFire1(InputValue inputValue)
     {
-        
+        Debug.Log("Fire1");
     }
 
     public void OnFire2(InputValue inputValue)
     {
-        if (Instantiate(_missilePrefab, _missileBay.position, _missileBay.rotation).TryGetComponent(out Missile missile) && _lockedTarget != null)
-        {
-            missile.Launch(_lockedTarget);
-        }
+        Debug.Log("Fire2");
     }
 
     public void OnEject(InputValue inputValue)
@@ -138,7 +121,7 @@ public class PlaneController : MonoBehaviour
         {
             rb.isKinematic = false;
             rb.useGravity = true;
-            rb.AddForce(_pilotTransform.up * _planeSpecs.EjectionForce, ForceMode.Impulse);
+            rb.AddForce(_pilotTransform.up * PlaneSpecs.EjectionForce, ForceMode.Impulse);
         }
     }
 

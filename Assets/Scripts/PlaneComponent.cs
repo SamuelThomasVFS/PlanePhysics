@@ -2,11 +2,14 @@ using UnityEngine;
 
 public abstract class PlaneComponent : MonoBehaviour
 {
-    public float Health { get; set; } = 100f;
+    public float Health { get; private set; } = 100f;
 
     [SerializeField] private ParticleSystem _disabledParticleSystem;
     
     private Collider _collider;
+    protected Rigidbody _rb;
+    protected FlightConditionsData _fcd;
+    protected PlaneController _pc;
 
     private void Awake()
     {
@@ -22,8 +25,21 @@ public abstract class PlaneComponent : MonoBehaviour
         }
     }
 
+    public void SetParentComponents(Rigidbody rb, FlightConditionsData fcd, PlaneController pc)
+    {
+        _rb = rb;
+        _fcd = fcd;
+        _pc = pc;
+    }
+
     private void DisableComponent()
     {
         _collider.enabled = false;
     }
+}
+
+public enum Side
+{
+    Left, 
+    Right
 }

@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <DragCoefficient>k__BackingField: 1
   <EjectionForce>k__BackingField: 10
+  <ThrottleRange>k__BackingField: {x: 0, y: 1}
+  <ThrottleInputAcceleration>k__BackingField: 0.3

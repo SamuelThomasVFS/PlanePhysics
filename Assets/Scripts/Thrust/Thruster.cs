@@ -2,12 +2,27 @@ using UnityEngine;
 
 public class Thruster : PlaneComponent
 {
-    [SerializeField] private float _power;
+    [SerializeField] private float _power = 5f;
 
-    public void FireThruster(Rigidbody rb, float throttle)
+    private float _thrust = 0f;
+
+    private void Update()
     {
-        if (Health <= 0) return;
-        float thrust = throttle * _power;
-        rb.AddForceAtPosition(transform.forward * thrust, transform.position);
+        GetThrust();
+    }
+
+    private void FixedUpdate()
+    {
+        FireThruster();
+    }
+    
+    private void GetThrust()
+    {
+        _thrust = _pc.Throttle * _power;
+    }
+    
+    private void FireThruster()
+    {
+        _rb.AddForceAtPosition(transform.forward * _thrust, transform.position);
     }
 }
