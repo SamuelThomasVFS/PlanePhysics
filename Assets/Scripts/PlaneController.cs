@@ -64,14 +64,14 @@ public class PlaneController : MonoBehaviour
         PitchInput = Mathf.Clamp(PitchInput, PlaneSpecs.ElevatorAngleRange.x, PlaneSpecs.ElevatorAngleRange.y);
         
         // Set public speed
-        Speed = _rb.velocity.magnitude;
+        Speed = _rb.linearVelocity.magnitude;
 
     }
 
     private void FixedUpdate()
     {
         // Todo: Handle drag using advanced system, current is placeholder
-        Vector3 drag = -_rb.velocity * PlaneSpecs.DragCoefficient;
+        Vector3 drag = -_rb.linearVelocity * PlaneSpecs.DragCoefficient;
         _rb.AddForce(drag, ForceMode.Force);
     }
 
