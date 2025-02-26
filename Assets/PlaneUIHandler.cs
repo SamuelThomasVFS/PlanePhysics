@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,7 +22,14 @@ public class PlaneUIHandler : MonoBehaviour
     private void Update()
     {
         _throttleSlider.value = _controller.Throttle;
-        _speedText.text = _controller.Speed.ToString();
+        _speedText.text = FilterSpeed(_controller.Speed);
+    }
+
+    private string FilterSpeed(float speed)
+    {
+        string speedText = speed.ToString();
+        speedText = speedText.Truncate(3, "m/s");
+        return speedText;
     }
     
     

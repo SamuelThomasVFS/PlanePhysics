@@ -23,8 +23,11 @@ public class PlaneController : MonoBehaviour
     [SerializeField] private FlightConditionsData _flightConditions;
     [field: SerializeField] public PlaneSpecificationsData PlaneSpecs;
     
-    [field:SerializeField] public float Throttle { get; private set; }
-    [field:SerializeField] public float Speed { get; private set; }
+    [field: SerializeField] public float Throttle { get; private set; }
+    [field: SerializeField] public float YawInput { get; private set; }
+    [field: SerializeField] public float RollInput { get; private set; }
+    [field: SerializeField] public float PitchInput { get; private set; }
+    [field: SerializeField] public float Speed { get; private set; }
     
     private List<PlaneComponent> _components = new List<PlaneComponent>();
     private List<Thruster> _thrusters = new List<Thruster>();
@@ -51,12 +54,25 @@ public class PlaneController : MonoBehaviour
         // Set Throttle
         Throttle += _accelInput * PlaneSpecs.ThrottleInputAcceleration * Time.deltaTime;
         Throttle = Mathf.Clamp(Throttle, PlaneSpecs.ThrottleRange.x, PlaneSpecs.ThrottleRange.y);
-
+        
+        // Set flap input
+        YawInput += _yawInput * PlaneSpecs.YawInputAcceleration * Time.deltaTime;
+        RollInput += _mouseInput.x * PlaneSpecs.RollInputAcceleration * Time.deltaTime;
+        PitchInput += _mouseInput.y * PlaneSpecs.PitchInputAcceleration * Time.deltaTime;
+        YawInput = Mathf.Clamp(YawInput, PlaneSpecs.RudderAngleRange.x, PlaneSpecs.RudderAngleRange.y);
+        RollInput = Mathf.Clamp(RollInput, PlaneSpecs.AileronAngleRange.x, PlaneSpecs.AileronAngleRange.y);
+        PitchInput = Mathf.Clamp(PitchInput, PlaneSpecs.ElevatorAngleRange.x, PlaneSpecs.ElevatorAngleRange.y);
+        
         // Set public speed
         Speed = _rb.velocity.magnitude;
 
+    }
 
-
+    private void FixedUpdate()
+    {
+        // Todo: Handle drag using advanced system, current is placeholder
+        Vector3 drag = -_rb.velocity * PlaneSpecs.DragCoefficient;
+        _rb.AddForce(drag, ForceMode.Force);
     }
 
     private void Initialize()
