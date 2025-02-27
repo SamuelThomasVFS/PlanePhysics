@@ -1,11 +1,8 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using Unity.Cinemachine;
-using UnityEngine.Serialization;
 
 [RequireComponent(typeof(PlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
