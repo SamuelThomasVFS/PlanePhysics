@@ -105,15 +105,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SwitchCam",
-                    "type": "Button",
-                    "id": "2e2bfce2-e294-43e7-96ce-73dcea1c1f33",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "Press(behavior=2)",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Eject",
                     "type": "Button",
                     "id": "389c3d10-21dc-4aaf-88b0-895466d44e5b",
@@ -528,17 +519,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "Fire2",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "66df9a85-242f-4ce3-9c1a-bbca1c166f19",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SwitchCam",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

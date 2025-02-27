@@ -9,13 +9,6 @@ using Unity.Cinemachine;
 [RequireComponent(typeof(AreaCalculator))]
 public class PlaneController : MonoBehaviour
 {
-    [Header("Spatial")]
-    [SerializeField] private Transform _pilotTransform;
-    [SerializeField] private Transform _pilotSeat;
-    [SerializeField] private Transform _camCenter;
-    [SerializeField] private CinemachineCamera _forwardCamera;
-    [SerializeField] private CinemachineCamera _firstPersonCamera;
-    
     [Header("Data")]
     [SerializeField] private FlightConditionsData _flightConditions;
     [field: SerializeField] public PlaneSpecificationsData PlaneSpecs;
@@ -34,7 +27,7 @@ public class PlaneController : MonoBehaviour
     private Rigidbody _rb;
     private AreaCalculator _ac;
     
-    // Input
+    // Input variables
     private float _yawInput;
     private float _accelInput;
     private Vector2 _mouseInput;
@@ -46,21 +39,13 @@ public class PlaneController : MonoBehaviour
 
     private void Update()
     {
-        GetMouseInput();
+        HandleInput();
         
         // Set Throttle
         Throttle += _accelInput * PlaneSpecs.ThrottleInputAcceleration * Time.deltaTime;
         Throttle = Mathf.Clamp(Throttle, PlaneSpecs.ThrottleRange.x, PlaneSpecs.ThrottleRange.y);
         
-        // Set flap input
-        YawInput += _yawInput * PlaneSpecs.YawInputAcceleration * Time.deltaTime;
-        RollInput += _mouseInput.x * PlaneSpecs.RollInputAcceleration * Time.deltaTime;
-        PitchInput += _mouseInput.y * PlaneSpecs.PitchInputAcceleration * Time.deltaTime;
-        YawInput = Mathf.Clamp(YawInput, -1, 1);
-        RollInput = Mathf.Clamp(RollInput, -1, 1);
-        PitchInput = Mathf.Clamp(PitchInput, -1, 1);
-        
-        // Set public speed
+        // Set publicly accessible speed
         Speed = _rb.linearVelocity.magnitude;
 
     }
@@ -90,20 +75,13 @@ public class PlaneController : MonoBehaviour
         }
     }
 
-    private void CalculateDrag()
-    {
-        float dragForce = PlaneSpecs.DragCoefficient * _ac.Return2DArea() * ((_flightConditions.AirDensity * Mathf.Pow(GetAirspeed().magnitude, 2)) / 2);
-        Vector3 dragVector = dragForce * GetAirspeed().normalized;
-        Debug.Log(dragVector + ", " + dragForce);
-    }
-
     private Vector3 GetAirspeed()
     {
         return -_rb.linearVelocity;
     }
 
     // -- Input handler methods --
-    private void GetMouseInput()
+    private void HandleInput()
     {
         _mouseInput.x = Input.GetAxis("Mouse X");
         _mouseInput.y = Input.GetAxis("Mouse Y");
@@ -124,31 +102,5 @@ public class PlaneController : MonoBehaviour
     public void OnFire2(InputValue inputValue)
     {
         Debug.Log("Fire2");
-    }
-
-    public void OnEject(InputValue inputValue)
-    {
-        Debug.Log("Ejecting");
-        _pilotTransform.parent = null;
-        if (_pilotTransform.TryGetComponent(out Rigidbody rb))
-        {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-            rb.AddForce(_pilotTransform.up * PlaneSpecs.EjectionForce, ForceMode.Impulse);
-        }
-    }
-
-    public void OnSwitchCam(InputValue inputValue)
-    {
-        if (_forwardCamera.Priority == 2)
-        {
-            _firstPersonCamera.transform.rotation = _camCenter.rotation;
-            _forwardCamera.Priority = 0;
-        }
-        else
-        {
-            _firstPersonCamera.transform.rotation = _camCenter.rotation;
-            _forwardCamera.Priority = 2;
-        }
     }
 }
